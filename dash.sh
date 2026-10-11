@@ -5,7 +5,7 @@
 ENV_FILE="${DASH_ENV:-$(dirname "$0")/dash.env}"
 [ -f "$ENV_FILE" ] || { echo "missing $ENV_FILE" >&2; exit 1; }
 . "$ENV_FILE"
-QUERY="viewport=1448x1072&colors=000000%2C242424%2C494949%2C6D6D6D%2C929292%2CB6B6B6%2CDBDBDB%2CFFFFFF&lang=en&rotate=90&zoom=1.76"
+QUERY="viewport=1448x1072&colors=000000%2C242424%2C494949%2C6D6D6D%2C929292%2CB6B6B6%2CDBDBDB%2CFFFFFF&lang=nl&rotate=90&zoom=1.76"
 URL="${BASE_URL}?${QUERY}"
 
 FBINK=fbink                       # full-path it if KFMon can't find it on PATH
