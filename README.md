@@ -18,6 +18,7 @@ Home Assistant dashboard ──► Puppet (headless Chrome) ──► PNG over H
 
 When `dash.sh` starts, it:
 
+- stops a dashboard that is already running, so two copies never fight over the screen
 - copies itself, `dash.env` and `fbink` to `/tmp/dash` (RAM) and restarts from there, so it keeps running while `/mnt/onboard` is unmounted, for example when the Kobo switches to USB storage mode
 - stops the Kobo UI (`nickel`) and its watchdog (`hindenburg`) so it has the screen to itself
 - starts `dropbear` so you can still SSH in after the UI is gone
@@ -67,7 +68,11 @@ The rest of the settings are at the top of `dash.sh`:
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `QUERY` | viewport, colours, rotate, zoom | Puppet screenshot parameters |
+| `VIEWPORT` | `1448x1072` | Screenshot size |
+| `COLORS` | 8 greys | Greyscale palette for the e-ink panel |
+| `UI_LANG` | `nl` | Dashboard language |
+| `ROTATE` | `90` | Rotation, 90 for landscape |
+| `ZOOM` | `1.76` | Zoom level |
 | `FBINK` | `fbink` | Path to the FBInk binary; use the full path if KFMon can't find it on `PATH`. It is copied to `RUN_DIR` at startup |
 | `RUN_DIR` | `/tmp/dash` | Folder in RAM the script, `dash.env`, `fbink` and the screenshot run from |
 | `LOG_DIR` | `/mnt/onboard/.dash` | Folder for the log |
@@ -76,10 +81,9 @@ The rest of the settings are at the top of `dash.sh`:
 | `MORNING_START` / `MORNING_END` | `6` / `10` | Faster refresh window (hours, end not included) |
 | `DEGHOST_EVERY` | `10` | Full flashing refresh every Nth draw |
 | `MAX_LOG_LINES` | `2000` | Log is trimmed to this many lines |
+| `TRIM_EVERY` | `50` | Check the log length every Nth draw |
 
-Puppet query parameters: `viewport` (screenshot size), `colors` (greyscale palette for the e-ink panel), `lang`, `rotate` (90 for landscape), `zoom`, and optionally `wait` (milliseconds to wait before taking the screenshot).
-
-You can point the script at a different env file with `DASH_ENV=/path/to/dash.env`.
+These become Puppet's `viewport`, `colors`, `lang`, `rotate` and `zoom` query parameters. Puppet also takes `wait` (milliseconds to wait before taking the screenshot) if your dashboard needs longer to load; add it to `URL` in `dash.sh`.
 
 ### 3. Install on the Kobo
 
