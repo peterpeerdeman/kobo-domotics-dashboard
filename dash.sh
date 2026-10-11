@@ -9,8 +9,9 @@ QUERY="viewport=1448x1072&colors=000000%2C242424%2C494949%2C6D6D6D%2C929292%2CB6
 URL="${BASE_URL}?${QUERY}"
 
 FBINK=fbink                       # full-path it if KFMon can't find it on PATH
-IMG=/tmp/dash.png
-TMP=/tmp/dash.png.new
+RUN_DIR=/tmp/dash                 # script, dash.env and fbink run from here (RAM)
+IMG="$RUN_DIR/dash.png"
+TMP="$RUN_DIR/dash.png.new"
 LOG_DIR=/mnt/onboard/.dash
 LOG="$LOG_DIR/dash.log"           # kept on onboard ON PURPOSE: survives the crash so you can read it
 
@@ -22,13 +23,29 @@ DEGHOST_EVERY=10                  # do a full flashing refresh every Nth draw
 MAX_LOG_LINES=2000                # trim the log so it can't grow forever
 # ----------------------------
 
+# run from RAM: copy ourselves, dash.env and fbink to $RUN_DIR and re-exec from
+# there, so the loop keeps going while /mnt/onboard is unmounted (e.g. USB
+# storage mode) instead of losing the files it runs from
+if [ "$(cd "$(dirname "$0")" && pwd)" != "$RUN_DIR" ]; then
+    mkdir -p "$RUN_DIR" &&
+        cp -f "$0" "$RUN_DIR/dash.sh" &&
+        cp -f "$ENV_FILE" "$RUN_DIR/dash.env" &&
+        cp -f "$(command -v "$FBINK")" "$RUN_DIR/fbink" &&
+        chmod +x "$RUN_DIR/fbink" ||
+        { echo "failed to copy to $RUN_DIR" >&2; exit 1; }
+    export DASH_ENV="$RUN_DIR/dash.env"
+    cd / && exec sh "$RUN_DIR/dash.sh"
+fi
+FBINK="$RUN_DIR/fbink"
+
 mkdir -p "$LOG_DIR"
 
 drawcount=0
 fails=0
 
+# while onboard is unmounted the log can't be written; skip those lines quietly
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"
+    { echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"; } 2>/dev/null
     sync                          # flush now, so the last lines survive a hard power cut
 }
 
@@ -68,7 +85,7 @@ draw() {
 trim_log() {
     lines=$(wc -l < "$LOG" 2>/dev/null) || return
     [ "${lines:-0}" -le "$MAX_LOG_LINES" ] && return
-    tail -n "$MAX_LOG_LINES" "$LOG" > "$LOG.tmp" && mv -f "$LOG.tmp" "$LOG"
+    { tail -n "$MAX_LOG_LINES" "$LOG" > "$LOG.tmp" && mv -f "$LOG.tmp" "$LOG"; } 2>/dev/null
 }
 
 while true; do

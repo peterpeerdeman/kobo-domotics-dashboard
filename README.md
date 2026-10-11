@@ -18,6 +18,7 @@ Home Assistant dashboard ──► Puppet (headless Chrome) ──► PNG over H
 
 When `dash.sh` starts, it:
 
+- copies itself, `dash.env` and `fbink` to `/tmp/dash` (RAM) and restarts from there, so it keeps running while `/mnt/onboard` is unmounted, for example when the Kobo switches to USB storage mode
 - stops the Kobo UI (`nickel`) and its watchdog (`hindenburg`) so it has the screen to itself
 - starts `dropbear` so you can still SSH in after the UI is gone
 - downloads the screenshot to a temp file and only replaces the last good image if the download succeeds
@@ -67,7 +68,8 @@ The rest of the settings are at the top of `dash.sh`:
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `QUERY` | viewport, colours, rotate, zoom | Puppet screenshot parameters |
-| `FBINK` | `fbink` | Path to the FBInk binary; use the full path if KFMon can't find it on `PATH` |
+| `FBINK` | `fbink` | Path to the FBInk binary; use the full path if KFMon can't find it on `PATH`. It is copied to `RUN_DIR` at startup |
+| `RUN_DIR` | `/tmp/dash` | Folder in RAM the script, `dash.env`, `fbink` and the screenshot run from |
 | `LOG_DIR` | `/mnt/onboard/.dash` | Folder for the log |
 | `INTERVAL_NORMAL` | `120` | Seconds between refreshes |
 | `INTERVAL_MORNING` | `30` | Seconds between refreshes from `MORNING_START` to `MORNING_END` |
@@ -95,6 +97,8 @@ Then add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo 
 - **Read the log:** `tail -f /mnt/onboard/.dash/dash.log`. Each line has a timestamp and the result of the draw.
 - **`FETCH FAILED`:** The Kobo can't reach Puppet, or Puppet returned nothing. The last good image stays on screen. After 3 failures in a row it is redrawn with a flash, so you can see the screen is out of date.
 - **`missing .../dash.env`:** `dash.env` isn't in the same folder as `dash.sh`.
+- **`failed to copy to /tmp/dash`:** The script couldn't copy itself, `dash.env` or `fbink` to RAM. Usually `fbink` isn't on `PATH`; set `FBINK` to its full path.
+- **Gaps in the log:** While `/mnt/onboard` is unmounted the dashboard keeps updating, but log lines from that time are lost.
 - **Getting the normal Kobo UI back:** Restart the device, or run `reboot` over SSH.
 
 ## Files
