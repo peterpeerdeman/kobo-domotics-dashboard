@@ -11,8 +11,8 @@ URL="${BASE_URL}?${QUERY}"
 FBINK=fbink                       # full-path it if KFMon can't find it on PATH
 IMG=/tmp/dash.png
 TMP=/tmp/dash.png.new
-CTRL=/mnt/onboard/.dash           # drop control files here
-LOG="$CTRL/dash.log"              # kept on onboard ON PURPOSE: survives the crash so you can read it
+LOG_DIR=/mnt/onboard/.dash
+LOG="$LOG_DIR/dash.log"           # kept on onboard ON PURPOSE: survives the crash so you can read it
 
 INTERVAL_NORMAL=120               # seconds between refreshes (normal)
 INTERVAL_MORNING=30               # seconds between refreshes in the morning window
@@ -20,14 +20,12 @@ MORNING_START=6                   # 06:00
 MORNING_END=10                    # up to (not incl.) 10:00
 DEGHOST_EVERY=10                  # do a full flashing refresh every Nth draw
 MAX_LOG_LINES=2000                # trim the log so it can't grow forever
-TICK=5                            # how often to check control files, seconds
 # ----------------------------
 
-mkdir -p "$CTRL"
+mkdir -p "$LOG_DIR"
 
 drawcount=0
 fails=0
-force_flash=0
 
 # read battery % and charge status (Charging/Discharging/Full) - the 06:45 diagnostic
 read_batt() {
@@ -83,13 +81,12 @@ trim_log() {
 while true; do
     drawcount=$((drawcount + 1))
 
-    # flash on a manual refresh, or every Nth draw to clear accumulated ghosting
-    if [ "$force_flash" -eq 1 ] || [ "$((drawcount % DEGHOST_EVERY))" -eq 1 ]; then
+    # every Nth draw, do a flashing refresh to clear accumulated ghosting
+    if [ "$((drawcount % DEGHOST_EVERY))" -eq 1 ]; then
         draw flash
     else
         draw
     fi
-    force_flash=0
 
     trim_log
 
@@ -102,22 +99,5 @@ while true; do
         INTERVAL=$INTERVAL_NORMAL
     fi
 
-    # wait out the interval in small ticks so control files act within ~TICK seconds
-    waited=0
-    while [ "$waited" -lt "$INTERVAL" ]; do
-        if [ -f "$CTRL/reboot" ]; then
-            rm -f "$CTRL/reboot"
-            log "reboot requested via control file"
-            sync
-            reboot
-        fi
-        if [ -f "$CTRL/refresh" ]; then
-            rm -f "$CTRL/refresh"
-            log "manual refresh requested"
-            force_flash=1
-            break
-        fi
-        sleep "$TICK"
-        waited=$((waited + TICK))
-    done
+    sleep "$INTERVAL"
 done

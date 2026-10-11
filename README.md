@@ -24,7 +24,6 @@ When `dash.sh` starts, it:
 - redraws the screen without a flash, and does a full flashing refresh every 10th draw to clear ghosting
 - refreshes every 30 s from 06:00 to 10:00 and every 120 s the rest of the day
 - logs every draw with the battery level and charge status to `/mnt/onboard/.dash/dash.log`, flushes each line to disk so the log survives a hard power cut, and trims the log to 2000 lines
-- checks every 5 s for control files in `/mnt/onboard/.dash` (see [Remote control](#remote-control))
 
 ## Requirements
 
@@ -69,12 +68,11 @@ The rest of the settings are at the top of `dash.sh`:
 | --- | --- | --- |
 | `QUERY` | viewport, colours, rotate, zoom | Puppet screenshot parameters |
 | `FBINK` | `fbink` | Path to the FBInk binary; use the full path if KFMon can't find it on `PATH` |
-| `CTRL` | `/mnt/onboard/.dash` | Folder for control files and the log |
+| `LOG_DIR` | `/mnt/onboard/.dash` | Folder for the log |
 | `INTERVAL_NORMAL` | `120` | Seconds between refreshes |
 | `INTERVAL_MORNING` | `30` | Seconds between refreshes from `MORNING_START` to `MORNING_END` |
 | `MORNING_START` / `MORNING_END` | `6` / `10` | Faster refresh window (hours, end not included) |
 | `DEGHOST_EVERY` | `10` | Full flashing refresh every Nth draw |
-| `TICK` | `5` | Seconds between control-file checks |
 | `MAX_LOG_LINES` | `2000` | Log is trimmed to this many lines |
 
 Puppet query parameters: `viewport` (screenshot size), `colors` (greyscale palette for the e-ink panel), `lang`, `rotate` (90 for landscape), `zoom`, and optionally `wait` (milliseconds to wait before taking the screenshot).
@@ -92,23 +90,12 @@ ssh root@<kobo-ip> chmod +x /mnt/onboard/.adds/dash/dash.sh
 
 Then add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo home screen starts the dashboard.
 
-## Remote control
-
-SSH into the Kobo (dropbear keeps running after the UI is stopped) and create a file in the control folder:
-
-```sh
-touch /mnt/onboard/.dash/refresh   # redraw now, with a full flash
-touch /mnt/onboard/.dash/reboot    # reboot the Kobo, which brings back the normal UI
-```
-
-The script deletes the file when it picks it up, within about `TICK` seconds.
-
 ## Troubleshooting
 
 - **Read the log:** `tail -f /mnt/onboard/.dash/dash.log`. Each line has a timestamp and the battery level and status, which helps tell a network problem from a flat battery.
 - **`FETCH FAILED`:** The Kobo can't reach Puppet, or Puppet returned nothing. The last good image stays on screen. After 3 failures in a row it is redrawn with a flash, so you can see the screen is out of date.
 - **`missing .../dash.env`:** `dash.env` isn't in the same folder as `dash.sh`.
-- **Getting the normal Kobo UI back:** Touch the `reboot` control file, or restart the device.
+- **Getting the normal Kobo UI back:** Restart the device, or run `reboot` over SSH.
 
 ## Files
 
