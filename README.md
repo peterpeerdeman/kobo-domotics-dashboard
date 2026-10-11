@@ -23,7 +23,7 @@ When `dash.sh` starts, it:
 - downloads the screenshot to a temp file and only replaces the last good image if the download succeeds
 - redraws the screen without a flash, and does a full flashing refresh every 10th draw to clear ghosting
 - refreshes every 30 s from 06:00 to 10:00 and every 120 s the rest of the day
-- logs every draw with the battery level and charge status to `/mnt/onboard/.dash/dash.log`, flushes each line to disk so the log survives a hard power cut, and trims the log to 2000 lines
+- logs every draw to `/mnt/onboard/.dash/dash.log`, flushes each line to disk so the log survives a hard power cut, and trims the log to 2000 lines
 
 ## Requirements
 
@@ -92,7 +92,7 @@ Then add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo 
 
 ## Troubleshooting
 
-- **Read the log:** `tail -f /mnt/onboard/.dash/dash.log`. Each line has a timestamp and the battery level and status, which helps tell a network problem from a flat battery.
+- **Read the log:** `tail -f /mnt/onboard/.dash/dash.log`. Each line has a timestamp and the result of the draw.
 - **`FETCH FAILED`:** The Kobo can't reach Puppet, or Puppet returned nothing. The last good image stays on screen. After 3 failures in a row it is redrawn with a flash, so you can see the screen is out of date.
 - **`missing .../dash.env`:** `dash.env` isn't in the same folder as `dash.sh`.
 - **Getting the normal Kobo UI back:** Restart the device, or run `reboot` over SSH.

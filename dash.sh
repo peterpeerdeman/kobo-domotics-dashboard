@@ -27,15 +27,8 @@ mkdir -p "$LOG_DIR"
 drawcount=0
 fails=0
 
-# read battery % and charge status (Charging/Discharging/Full) - the 06:45 diagnostic
-read_batt() {
-    cap=$(cat /sys/class/power_supply/*/capacity 2>/dev/null | head -n1)
-    st=$(cat /sys/class/power_supply/*/status 2>/dev/null | head -n1)
-    printf '%s%% %s' "${cap:-?}" "${st:-?}"
-}
-
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [$(read_batt)] $*" >> "$LOG"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $*" >> "$LOG"
     sync                          # flush now, so the last lines survive a hard power cut
 }
 
