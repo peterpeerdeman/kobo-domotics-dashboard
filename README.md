@@ -83,14 +83,16 @@ You can point the script at a different env file with `DASH_ENV=/path/to/dash.en
 
 ### 3. Install on the Kobo
 
-Copy `dash.sh` and `dash.env` to the same folder on the Kobo. Copy the FBInk binary too, and make sure the script can run it:
+`deploy.sh` copies `dash.sh` and `dash.env` to the Kobo over scp. It reads the Kobo's address, SSH port, user and target folder from `deploy.env`, which is gitignored like `dash.env`:
 
 ```sh
-scp dash.sh dash.env root@<kobo-ip>:/mnt/onboard/.adds/dash/
-ssh root@<kobo-ip> chmod +x /mnt/onboard/.adds/dash/dash.sh
+cp deploy.env.example deploy.env   # fill in KOBO_HOST, KOBO_PORT, KOBO_USER, KOBO_DIR
+./deploy.sh
 ```
 
-Then add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo home screen starts the dashboard.
+Run `./deploy.sh` again after each change. The running dashboard works from its copy in `/tmp/dash`, so restart it to pick up the new version.
+
+Make sure the FBInk binary is on the Kobo too, and add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo home screen starts the dashboard.
 
 ## Troubleshooting
 
@@ -107,3 +109,5 @@ Then add a KFMon launcher for `dash.sh`, so tapping its cover image on the Kobo 
 | --- | --- |
 | `dash.sh` | The dashboard loop that runs on the Kobo |
 | `dash.env.example` | Template for `dash.env` (local, gitignored) |
+| `deploy.sh` | Pushes `dash.sh` and `dash.env` to the Kobo |
+| `deploy.env.example` | Template for `deploy.env` (local, gitignored) |
