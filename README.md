@@ -106,6 +106,39 @@ Make sure the FBInk binary is on the Kobo too, and add a KFMon launcher for `das
 - **`failed to copy to /tmp/dash`:** The script couldn't copy itself, `dash.env` or `fbink` to RAM. Usually `fbink` isn't on `PATH`; set `FBINK` to its full path.
 - **Gaps in the log:** While `/mnt/onboard` is unmounted the dashboard keeps updating, but log lines from that time are lost.
 - **Getting the normal Kobo UI back:** Restart the device, or run `reboot` over SSH.
+- **Dashboard cover does nothing, or NickelMenu shows `generator error kfmon: error checking /tmp/kfmon-ipc.ctl`:** KFMon isn't running, usually after a Kobo firmware update. See [Reinstalling KFMon after a firmware update](#reinstalling-kfmon-after-a-firmware-update).
+
+### Reinstalling KFMon after a firmware update
+
+A Kobo firmware update replaces the root filesystem, which removes KFMon's boot hook. Everything on the USB drive survives: `.adds/kfmon/config/` (including the dashboard's watch), `.adds/nm/`, `dash.sh` and `dash.env`. But KFMon no longer starts, so tapping the dashboard cover does nothing and NickelMenu's `generator : main : kfmon` entry fails because KFMon's IPC socket `/tmp/kfmon-ipc.ctl` doesn't exist.
+
+To fix it, reinstall only KFMon's `KoboRoot.tgz`:
+
+1. Download the latest `OCP-KFMon-*.zip` from the [One-Click Packages thread](https://www.mobileread.com/forums/showthread.php?t=314220) (the entry marked "use this after a FW update"), and check its MD5 against the one listed there:
+
+   ```sh
+   curl -LO https://storage.gra.cloud.ovh.net/v1/AUTH_2ac4bfee353948ec8ea7fd1710574097/kfmon-pub/OCP-KFMon-<version>.zip
+   md5 -q OCP-KFMon-<version>.zip
+   ```
+
+2. Connect the Kobo over USB and extract only `KoboRoot.tgz`, so your existing KFMon configs aren't overwritten:
+
+   ```sh
+   unzip -o OCP-KFMon-<version>.zip .kobo/KoboRoot.tgz -d /Volumes/KOBOeReader
+   rm -f /Volumes/KOBOeReader/.kobo/._KoboRoot.tgz   # macOS metadata file, if present
+   ```
+
+3. Check that Nickel still skips hidden folders, so it doesn't import files from `.adds` into the library. `.kobo/Kobo/Kobo eReader.conf` should contain, under `[FeatureSettings]`:
+
+   ```ini
+   ExcludeSyncFolders=(\\.(?!kobo|adobe).+|([^.][^/]*/)+\\..+)
+   ```
+
+4. Eject the Kobo (`diskutil eject /Volumes/KOBOeReader`). If the eject fails because a process is using the volume, make sure no terminal has its working directory on the Kobo. Then unplug it. The Kobo shows "Updating", installs KFMon and reboots.
+
+5. Check that the NickelMenu error is gone and that tapping the dashboard cover starts the dashboard.
+
+If NickelMenu is missing after the update as well, reinstall its `KoboRoot.tgz` in the same way.
 
 ## Files
 
